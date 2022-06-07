@@ -1,35 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from 'react-query';
+import CharacterCard from './CharacterCard';
 
 export default function Characters() {
-  const [characters, setCharacters] = useState<Response | null>(null);
-
   const fetchCharacters = async () => {
     const res = await fetch('https://rickandmortyapi.com/api/character');
-    const data = await res.json();
-    console.log(data);
-    setCharacters(data);
+    return res.json();
   };
 
-  useEffect(() => {
-    fetchCharacters();
-  }, []);
+  const { data, status } = useQuery('characters', fetchCharacters);
 
-  if (!characters) {
+  if (status === 'loading') {
     return <div>Loading...</div>;
   }
 
+  if (status === 'error') {
+    return (
+      <div className="bg-red-400 text-pink-700 text-lg p-4">
+        {status.toString()}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col bg-red-500 w-full rounded-lg">
-      {characters.results?.map((character) => (
-        <div className="font-semibold w-1/2 bg-blue-500" key={character.id}>
-          {character.name}
-        </div>
+    <div className="bg-secondary w-full mt-20">
+      {data.results.map((character) => (
+        <CharacterCard key={character.id} character={character} />
       ))}
     </div>
   );
 }
 
-interface Response {
+// eslint-disable-next-line no-lone-blocks
+{
+  /*interface Response {
   info: {
     count: number;
     pages: number;
@@ -58,4 +62,6 @@ interface Results {
   status: string;
   type: string;
   url: string;
+}
+*/
 }
