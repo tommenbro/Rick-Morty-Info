@@ -1,20 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import CharacterCard from './CharacterCard';
 
 export default function Characters() {
-  const fetchCharacters = async () => {
-    const res = await fetch('https://rickandmortyapi.com/api/character');
+  const [page, setPage] = useState(1);
+
+  const fetchCharacters = async ({ queryKey }) => {
+    const res = await fetch(
+      `https://rickandmortyapi.com/api/character?page=${queryKey[1]}`
+    );
     return res.json();
   };
 
-  const { data, status } = useQuery('characters', fetchCharacters);
+  const { data, status, isPreviousData, isLoading, isError } = useQuery(
+    ['characters', page],
+    fetchCharacters,
+    {
+      keepPreviousData: true,
+    }
+  );
 
-  if (status === 'loading') {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (status === 'error') {
+  if (isError) {
     return (
       <div className="bg-red-400 text-pink-700 text-lg p-4">
         {status.toString()}
@@ -27,41 +37,22 @@ export default function Characters() {
       {data.results.map((character) => (
         <CharacterCard key={character.id} character={character} />
       ))}
+      <div className="ml-6">
+        <button
+          disabled={page === 1}
+          onClick={() => setPage((old) => old - 1)}
+          className="text-white w-24 bg-primary px-4 py-1 m-4 text-base font-semibold rounded-xl hover:bg-tertiary hover:scale-105 duration-75 ease-in-out active:text-secondary"
+        >
+          Previous
+        </button>
+        <button
+          disabled={isPreviousData && !data.info.next}
+          onClick={() => setPage((old) => old + 1)}
+          className="text-white w-24 bg-primary px-4 py-1 m-4 text-base font-semibold rounded-xl hover:bg-tertiary hover:scale-105 duration-75 ease-in-out active:text-secondary"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
-}
-
-// eslint-disable-next-line no-lone-blocks
-{
-  /*interface Response {
-  info: {
-    count: number;
-    pages: number;
-    next: string | null;
-    prev: string | null;
-  };
-  results: Results[];
-}
-
-interface Results {
-  created: Date;
-  episode: string[];
-  gender: string;
-  id: number;
-  image: string;
-  location: {
-    name: string;
-    url: string;
-  };
-  name: string;
-  origin: {
-    name: string;
-    url: string;
-  };
-  species: string;
-  status: string;
-  type: string;
-  url: string;
-}
-*/
 }
